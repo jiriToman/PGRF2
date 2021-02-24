@@ -47,8 +47,58 @@ public class Renderer3D implements GPURenderer {
 
 
             } else if (topologyType == TopologyType.LINE) {
-                // TODO
-            } // ...
+                for (int i = index; i < index + count * 2; i += 2) {
+                    Integer i1 = ib.get(i);
+                    Integer i2 = ib.get(i + 1);
+
+
+                    Vertex v1 = vb.get(i1);
+                    Vertex v2 = vb.get(i2);
+
+                    prepareline(v1, v2);
+                }
+
+            } // pokud je obj drat model line , plocha triangle
+        }
+    }
+    private void prepareline(Vertex v1, Vertex v2) {
+        // 1. transformace vrcholů
+        Vertex a = new Vertex(v1.getPoint().mul(model).mul(view).mul(projection), v1.getColor());
+        Vertex b = new Vertex(v2.getPoint().mul(model).mul(view).mul(projection), v2.getColor());
+
+        // 2. ořezání
+        if (a.getX() > a.getW() && b.getX() > b.getW()) return; // line je moc vpravo
+        if (a.getX() < -a.getW() && b.getX() < -b.getW()) return; // moc vlevo
+        if (a.getY() > a.getW() && b.getY() > b.getY() ) return; // je moc nahore
+        if (a.getY() < -a.getW() && b.getY() < -b.getY() ) return; // moc dole
+        if (a.getZ() > a.getW() && b.getZ() > b.getW() ) return;
+        if (a.getZ() < 0 && b.getZ() < 0) return;
+
+        // 3. seřazení podle Z
+        // slide 97
+        if (a.getZ() < b.getZ()) {
+            Vertex temp = a;
+            a = b;
+            b = temp;
+        }
+        // teď máme seřazeno - Z od největšího po nejmenší: A, B
+
+        // 4. ořezání podle hrany Z
+        // slide 97
+        if (a.getZ() < 0) {
+            // A.Z je menší než nula => všechny Z jsou menší než nula => není co zobrazit
+        } else if (b.getZ() < 0) {
+            // vrchol A je vidět, vrchol B neni
+            double t1 = (0 - a.getZ()) / (b.getZ() - a.getZ());
+            // 0 -> protože ten nový vrchol (ab), který má vzniknout, bude mít souřadnici Z nula
+            Vertex ab = a.mul(1 - t1).add(b.mul(t1));
+
+
+            drawLine(a, ab);
+
+        } else {
+            // vidím celý trojúhelník
+            drawLine(a, b);
         }
     }
 
@@ -63,7 +113,10 @@ public class Renderer3D implements GPURenderer {
         // slide 93
         if (a.getX() > a.getW() && b.getX() > b.getW() && c.getX() > c.getW()) return; // trojúhelník je moc vpravo
         if (a.getX() < -a.getW() && b.getX() < -b.getW() && c.getX() < -c.getW()) return; // moc vlevo
-        // TODO Y
+
+        if (a.getY() > a.getW() && b.getY() > b.getY() && c.getY() > c.getY()) return; // trojúhelník je moc nahore
+        if (a.getY() < -a.getW() && b.getY() < -b.getY() && c.getW() < -c.getY()) return; // moc dole
+
         if (a.getZ() > a.getW() && b.getZ() > b.getW() && c.getZ() > c.getW()) return;
         if (a.getZ() < 0 && b.getZ() < 0 && c.getZ() < 0) return;
 
@@ -174,7 +227,41 @@ public class Renderer3D implements GPURenderer {
         }
 
         // 2. for cyklus B->C
+//        spodni cast vykresleni plochy trojuhelniku
         // TODO
+    }
+    private void drawLine(Vertex a, Vertex b) {
+        // 1. dehomogenizace
+        Optional<Vertex> dA = a.dehomog();
+        Optional<Vertex> dB = b.dehomog();
+
+        // zahodit line, pokud některý vrchol má w==0 (nelze provést dehomogenizaci)
+        if (dA.isEmpty() || dB.isEmpty() ) return;
+
+        Vertex v1 = dA.get();
+        Vertex v2 = dB.get();
+
+
+        // 2. transformace do okna
+        Vec3D vec3D1 = transformToWindow(v1.getPoint());
+        Vertex aa = new Vertex(new Point3D(vec3D1), v1.getColor());
+
+        Vec3D vec3D2 = transformToWindow(v2.getPoint());
+        Vertex bb = new Vertex(new Point3D(vec3D2), v2.getColor());
+
+
+        // 3. seřazení podle Y
+        if (aa.getY() > bb.getY()) {
+            Vertex temp = aa;
+            aa = bb;
+            bb = temp;
+        }
+
+        // 4. interpolace podle Y
+        // slide 125
+        // 1. for cyklus A->B
+//       lina se krespi pixel po pixelu
+
     }
 
     private void fillLine(Vertex a, Vertex b) {
