@@ -229,6 +229,16 @@ public class Renderer3D implements GPURenderer {
         // 2. for cyklus B->C
 //        spodni cast vykresleni plochy trojuhelniku
         // TODO
+        int xStart = Math.max(0, (int) bb.getY() + 1);
+        double xEnd = Math.min(raster.getWidth() - 1, cc.getY());
+        for (int y = xStart; y <= xEnd; y++) {
+            double t3 = (y - bb.getY()) / (cc.getY() - bb.getY());
+            Vertex f = bb.mul(1 - t3).add(cc.mul(t3));
+
+            double t4 = (y - aa.getY()) / (cc.getY() - aa.getY());
+            Vertex g = aa.mul(1 - t4).add(cc.mul(t4));
+            fillLine(f, g);
+        }
     }
     private void drawLine(Vertex a, Vertex b) {
         // 1. dehomogenizace
@@ -248,7 +258,7 @@ public class Renderer3D implements GPURenderer {
 
         Vec3D vec3D2 = transformToWindow(v2.getPoint());
         Vertex bb = new Vertex(new Point3D(vec3D2), v2.getColor());
-
+// zjistit podle x nebo y dx dy abs x2-x1 abs y2-y1 vyresi cerchovani
 
         // 3. seřazení podle Y
         if (aa.getY() > bb.getY()) {
@@ -257,9 +267,19 @@ public class Renderer3D implements GPURenderer {
             bb = temp;
         }
 
-        // 4. interpolace podle Y
+        // 4. interpolace podle Y shovat do jedne vetve podm pridat pro x
         // slide 125
-        // 1. for cyklus A->B
+        int yStart = Math.max(0, (int) aa.getY() + 1);
+        double yEnd = Math.min(raster.getHeight() - 1, bb.getY());
+        for (int y = yStart; y <= yEnd; y++) {
+            double t1 = (y - aa.getY()) / (bb.getY() - aa.getY());
+            Vertex d = aa.mul(1 - t1).add(bb.mul(t1));
+
+
+     drawPixel((int)Math.round(d.getX()),(int)Math.round(d.getY()),d.getZ(),d.getColor());
+
+        }
+
 //       lina se krespi pixel po pixelu
 
     }
