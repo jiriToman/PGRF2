@@ -260,29 +260,56 @@ public class Renderer3D implements GPURenderer {
         Vertex bb = new Vertex(new Point3D(vec3D2), v2.getColor());
 // zjistit podle x nebo y dx dy abs x2-x1 abs y2-y1 vyresi cerchovani
 
-        // 3. seřazení podle Y
-        if (aa.getY() > bb.getY()) {
+        var x1 =aa.getX();
+        var x2=bb.getX();
+        var y1 =aa.getY();
+        var y2=bb.getY();
+        var dy =y2-y1;
+        var dx =x2-x1;
+
+
+        if(Math.abs(dy)<Math.abs(dx)){
+            if (x2<x1) {
+                Vertex temp = aa;
+                aa = bb;
+                bb = temp;
+//            switchPoints(aa,bb);
+                // 4. interpolace podle X
+                int xStart = Math.max(0, (int) aa.getX() + 1);
+                double xEnd = Math.min(raster.getWidth() - 1, bb.getX());
+                for (int x = xStart; x <= xEnd; x++) {
+                    double t1 = (x - aa.getX()) / (bb.getX() - aa.getX());
+                    Vertex d = aa.mul(1 - t1).add(bb.mul(t1));
+                    drawPixel((int)Math.round(d.getX()),(int)Math.round(d.getY()),d.getZ(),d.getColor());
+                }
+        } else if(y2<y1) {
             Vertex temp = aa;
             aa = bb;
             bb = temp;
+//                4. interpolace podle Y
+                int yStart = Math.max(0, (int) aa.getY() + 1);
+                double yEnd = Math.min(raster.getHeight() - 1, bb.getY());
+                for (int y = yStart; y <= yEnd; y++) {
+                    double t1 = (y - aa.getY()) / (bb.getY() - aa.getY());
+                    Vertex d = aa.mul(1 - t1).add(bb.mul(t1));
+                    drawPixel((int)Math.round(d.getX()),(int)Math.round(d.getY()),d.getZ(),d.getColor());
         }
 
-        // 4. interpolace podle Y shovat do jedne vetve podm pridat pro x
-        // slide 125
-        int yStart = Math.max(0, (int) aa.getY() + 1);
-        double yEnd = Math.min(raster.getHeight() - 1, bb.getY());
-        for (int y = yStart; y <= yEnd; y++) {
-            double t1 = (y - aa.getY()) / (bb.getY() - aa.getY());
-            Vertex d = aa.mul(1 - t1).add(bb.mul(t1));
 
 
-     drawPixel((int)Math.round(d.getX()),(int)Math.round(d.getY()),d.getZ(),d.getColor());
 
-        }
+                // slide 125
+
+
+
+
+
+                }
 
 //       lina se krespi pixel po pixelu
 
-    }
+            }
+        }
 
     private void fillLine(Vertex a, Vertex b) {
         if (a.getX() > b.getX()) {
@@ -337,5 +364,10 @@ public class Renderer3D implements GPURenderer {
     public void setProjection(Mat4 projection) {
         this.projection = projection;
     }
+//    public void switchPoints(Vertex prvni, Vertex druhy){
+//        Vertex temp = prvni;
+//        prvni = druhy;
+//        druhy = temp;
+//        }
 
 }

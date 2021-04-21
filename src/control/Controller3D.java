@@ -40,6 +40,8 @@ public class Controller3D  {
         initMatrices();
         initListeners(panel);
         //tady listenery
+//        pohled transforms camera
+
         initBuffers();
         initAxis();
         display();
@@ -72,6 +74,9 @@ public class Controller3D  {
                 .withPosition(e)
                 .withAzimuth(Math.toRadians(90))
                 .withZenith(Math.toRadians(-15));
+        //
+//      camera = camera.addAzimuth(Math.toRadians(180); to same pro zenith royum hodn pro mys
+//       camera.forward(0.1)
 
         projection = new Mat4PerspRH(
                 Math.PI / 3,
