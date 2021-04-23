@@ -23,10 +23,11 @@ public class Controller3D  {
     private final List<Part> partBuffer;
     private final List<Integer> indexBuffer;
     private final List<Vertex> vertexBuffer;
-    private final List<Vertex> axisBuffer;
+    private final List<Part> axisBuffer;
 
     private Mat4 model, projection;
     private Camera camera;
+    private boolean filled = true;
 
     public Controller3D(Panel panel) {
         this.panel = panel;
@@ -66,6 +67,8 @@ public class Controller3D  {
 
 //        renderer.draw();
       renderer.draw(partBuffer, indexBuffer, vertexBuffer);
+      renderer.setModel(new Mat4Identity());
+    renderer.draw(axisBuffer, indexBuffer, vertexBuffer);
 
         // necessary to manually request update of the UI
 
@@ -164,6 +167,15 @@ public class Controller3D  {
                 if (key == KeyEvent.VK_L) {
                     setComposeModel();
                 }
+                if (key == KeyEvent.VK_F) {
+                    if (filled) {
+                        switchModelType(false);
+                        filled=false;}
+                    else {
+                        switchModelType(true);
+                        filled=true;
+                    }
+                }
 
                 if (key == KeyEvent.VK_UP) {
                     camera = camera.forward(speed);
@@ -190,6 +202,7 @@ public class Controller3D  {
         vertexBuffer.add(new Vertex(new Point3D(-2, 6, -4), new Col(255, 125, 200)));
         vertexBuffer.add(new Vertex(new Point3D(5, 7, -2), new Col(0, 125, 200)));
         vertexBuffer.add(new Vertex(new Point3D(-5, 7, 2), new Col(0, 125, 200)));
+        vertexBuffer.add(new Vertex(new Point3D(-7, 5, 3), new Col(0, 125, 200)));
 
         // 1 trojúhelník
         indexBuffer.add(1);
@@ -197,30 +210,30 @@ public class Controller3D  {
         indexBuffer.add(3);
 
         // 2 úsečky
-        indexBuffer.add(0);
-        indexBuffer.add(3);
         indexBuffer.add(4);
+        indexBuffer.add(3);
         indexBuffer.add(1);
+        indexBuffer.add(5);
 
         partBuffer.add(new Part(TopologyType.TRIANGLE, 0, 1));
         partBuffer.add(new Part(TopologyType.LINE, 3, 2));
 
     }
     private void initAxis() {
-        vertexBuffer.add(new Vertex(new Point3D(10, 0, 0), new Col(255, 255, 255)));
-        vertexBuffer.add(new Vertex(new Point3D(0, 10, 0), new Col(255, 255, 255)));
-        vertexBuffer.add(new Vertex(new Point3D(0, 0, 10), new Col(255, 255, 255)));
+        vertexBuffer.add(new Vertex(new Point3D(10, 0, 0), new Col(255, 0, 0)));
+        vertexBuffer.add(new Vertex(new Point3D(0, 10, 0), new Col(0, 255, 0)));
+        vertexBuffer.add(new Vertex(new Point3D(0, 0, 10), new Col(0, 0, 255)));
 // bez model transformace
 
         // 3 úsečky
         indexBuffer.add(0);
-        indexBuffer.add(5);
-        indexBuffer.add(0);
         indexBuffer.add(6);
         indexBuffer.add(0);
         indexBuffer.add(7);
+        indexBuffer.add(0);
+        indexBuffer.add(8);
 
-        partBuffer.add(new Part(TopologyType.LINE, 7, 3));
+        axisBuffer.add(new Part(TopologyType.LINE, 7, 3));
 
     }
     private void setRotationModel(double alpha, double beta, double gamma) {
@@ -276,6 +289,15 @@ private void setComposeModel() {
         if (projection instanceof Mat4PerspRH) {
             projection = new Mat4OrthoRH(5, 5, 0.5, 30);
         } else{ projection = new Mat4PerspRH(Math.PI / 3, imageBuffer.getHeight() / (float) imageBuffer.getWidth(), 0.5, 30);}
+    }
+    private void switchModelType(boolean filled) {
+
+        renderer.clear();
+        renderer.setView(camera.getViewMatrix());
+        renderer.setModelType(filled);
+        renderer.setModel(model);
+
+        display();
     }
 
 }
