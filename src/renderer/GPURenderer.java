@@ -9,6 +9,7 @@ import java.util.List;
 public interface GPURenderer {
 
     void draw(List<Part> parts, List<Integer> ib, List<Vertex> vb);
+//    void draw(Solid... solids);
 
     void clear();
 
@@ -18,4 +19,5 @@ public interface GPURenderer {
 
     void setProjection(Mat4 projection);
 
+    void setModelType(boolean filled);
 }

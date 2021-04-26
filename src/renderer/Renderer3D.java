@@ -16,6 +16,7 @@ public class Renderer3D implements GPURenderer {
     private final DepthBuffer depthBuffer;
 
     private Mat4 model, view, projection;
+    public boolean filled = true;
 
     public Renderer3D(Raster<Integer> raster) {
         this.raster = raster;
@@ -61,6 +62,7 @@ public class Renderer3D implements GPURenderer {
             } // pokud je obj drat model line , plocha triangle
         }
     }
+
     private void prepareline(Vertex v1, Vertex v2) {
         // 1. transformace vrcholů
         Vertex a = new Vertex(v1.getPoint().mul(model).mul(view).mul(projection), v1.getColor());
@@ -69,9 +71,9 @@ public class Renderer3D implements GPURenderer {
         // 2. ořezání
         if (a.getX() > a.getW() && b.getX() > b.getW()) return; // line je moc vpravo
         if (a.getX() < -a.getW() && b.getX() < -b.getW()) return; // moc vlevo
-        if (a.getY() > a.getW() && b.getY() > b.getY() ) return; // je moc nahore
-        if (a.getY() < -a.getW() && b.getY() < -b.getY() ) return; // moc dole
-        if (a.getZ() > a.getW() && b.getZ() > b.getW() ) return;
+        if (a.getY() > a.getW() && b.getY() > b.getY()) return; // je moc nahore
+        if (a.getY() < -a.getW() && b.getY() < -b.getY()) return; // moc dole
+        if (a.getZ() > a.getW() && b.getZ() > b.getW()) return;
         if (a.getZ() < 0 && b.getZ() < 0) return;
 
         // 3. seřazení podle Z
@@ -97,7 +99,7 @@ public class Renderer3D implements GPURenderer {
             drawLine(a, ab);
 
         } else {
-            // vidím celý trojúhelník
+
             drawLine(a, b);
         }
     }
@@ -195,58 +197,70 @@ public class Renderer3D implements GPURenderer {
         Vec3D vec3D3 = transformToWindow(v3.getPoint());
         Vertex cc = new Vertex(new Point3D(vec3D3), v3.getColor());
 
-        // 3. seřazení podle Y
-        if (aa.getY() > bb.getY()) {
-            Vertex temp = aa;
-            aa = bb;
-            bb = temp;
-        }
-        if (bb.getY() > cc.getY()) {
-            Vertex temp = bb;
-            bb = cc;
-            cc = temp;
-        }
-        if (aa.getY() > bb.getY()) {
-            Vertex temp = aa;
-            aa = bb;
-            bb = temp;
-        }
+        // podminka pro dratovy
 
-        // 4. interpolace podle Y
-        // slide 125
-        // 1. for cyklus A->B
-        int yStart = Math.max(0, (int) aa.getY() + 1);
-        double yEnd = Math.min(raster.getHeight() - 1, bb.getY());
-        for (int y = yStart; y <= yEnd; y++) {
-            double t1 = (y - aa.getY()) / (bb.getY() - aa.getY());
-            Vertex d = aa.mul(1 - t1).add(bb.mul(t1));
+        if (filled) {
+            // 3. seřazení podle Y
+            if (aa.getY() > bb.getY()) {
+                Vertex temp = aa;
+                aa = bb;
+                bb = temp;
+            }
+            if (bb.getY() > cc.getY()) {
+                Vertex temp = bb;
+                bb = cc;
+                cc = temp;
+            }
+            if (aa.getY() > bb.getY()) {
+                Vertex temp = aa;
+                aa = bb;
+                bb = temp;
+            }
 
-            double t2 = (y - aa.getY()) / (cc.getY() - aa.getY());
-            Vertex e = aa.mul(1 - t2).add(cc.mul(t2));
-            fillLine(d, e);
-        }
+            // 4. interpolace podle Y
+            // slide 125
+            // 1. for cyklus A->B
+            int yStart = Math.max(0, (int) aa.getY() + 1);
+            double yEnd = Math.min(raster.getHeight() - 1, bb.getY());
+            for (int y = yStart; y <= yEnd; y++) {
+                double t1 = (y - aa.getY()) / (bb.getY() - aa.getY());
+                Vertex d = aa.mul(1 - t1).add(bb.mul(t1));
 
-        // 2. for cyklus B->C
+                double t2 = (y - aa.getY()) / (cc.getY() - aa.getY());
+                Vertex e = aa.mul(1 - t2).add(cc.mul(t2));
+                fillLine(d, e);
+            }
+
+            // 2. for cyklus B->C
 //        spodni cast vykresleni plochy trojuhelniku
-        // TODO
-        int xStart = Math.max(0, (int) bb.getY() + 1);
-        double xEnd = Math.min(raster.getWidth() - 1, cc.getY());
-        for (int y = xStart; y <= xEnd; y++) {
-            double t3 = (y - bb.getY()) / (cc.getY() - bb.getY());
-            Vertex f = bb.mul(1 - t3).add(cc.mul(t3));
 
-            double t4 = (y - aa.getY()) / (cc.getY() - aa.getY());
-            Vertex g = aa.mul(1 - t4).add(cc.mul(t4));
-            fillLine(f, g);
+            int xStart = Math.max(0, (int) bb.getY() + 1);
+            double xEnd = Math.min(raster.getWidth() - 1, cc.getY());
+            for (int y = xStart; y <= xEnd; y++) {
+                double t3 = (y - bb.getY()) / (cc.getY() - bb.getY());
+                Vertex f = bb.mul(1 - t3).add(cc.mul(t3));
+
+                double t4 = (y - aa.getY()) / (cc.getY() - aa.getY());
+                Vertex g = aa.mul(1 - t4).add(cc.mul(t4));
+                fillLine(f, g);
+            }
+
+        } else {
+        drawLine(a,b);
+        drawLine(a,c);
+        drawLine(b,c);
+
         }
+
     }
+
     private void drawLine(Vertex a, Vertex b) {
         // 1. dehomogenizace
         Optional<Vertex> dA = a.dehomog();
         Optional<Vertex> dB = b.dehomog();
 
         // zahodit line, pokud některý vrchol má w==0 (nelze provést dehomogenizaci)
-        if (dA.isEmpty() || dB.isEmpty() ) return;
+        if (dA.isEmpty() || dB.isEmpty()) return;
 
         Vertex v1 = dA.get();
         Vertex v2 = dB.get();
@@ -260,56 +274,50 @@ public class Renderer3D implements GPURenderer {
         Vertex bb = new Vertex(new Point3D(vec3D2), v2.getColor());
 // zjistit podle x nebo y dx dy abs x2-x1 abs y2-y1 vyresi cerchovani
 
-        var x1 =aa.getX();
-        var x2=bb.getX();
-        var y1 =aa.getY();
-        var y2=bb.getY();
-        var dy =y2-y1;
-        var dx =x2-x1;
+        var x1 = aa.getX();
+        var x2 = bb.getX();
+        var y1 = aa.getY();
+        var y2 = bb.getY();
+        var dy = y2 - y1;
+        var dx = x2 - x1;
 
 
-        if(Math.abs(dy)<Math.abs(dx)){
-            if (x2<x1) {
+        if (Math.abs(dy) < Math.abs(dx)) {
+            if (x2 < x1) {
                 Vertex temp = aa;
                 aa = bb;
                 bb = temp;
+            }
 //            switchPoints(aa,bb);
-                // 4. interpolace podle X
-                int xStart = Math.max(0, (int) aa.getX() + 1);
-                double xEnd = Math.min(raster.getWidth() - 1, bb.getX());
-                for (int x = xStart; x <= xEnd; x++) {
-                    double t1 = (x - aa.getX()) / (bb.getX() - aa.getX());
-                    Vertex d = aa.mul(1 - t1).add(bb.mul(t1));
-                    drawPixel((int)Math.round(d.getX()),(int)Math.round(d.getY()),d.getZ(),d.getColor());
-                }
-        } else if(y2<y1) {
-            Vertex temp = aa;
-            aa = bb;
-            bb = temp;
+            // 4. interpolace podle X
+            int xStart = Math.max(0, (int) aa.getX() + 1);
+            double xEnd = Math.min(raster.getWidth() - 1, bb.getX());
+            for (int x = xStart; x <= xEnd; x++) {
+                double t1 = (x - aa.getX()) / (bb.getX() - aa.getX());
+                Vertex d = aa.mul(1 - t1).add(bb.mul(t1));
+                drawPixel((int) Math.round(d.getX()), (int) Math.round(d.getY()), d.getZ(), d.getColor());
+            }
+        } else {
+            if (y2 < y1) {
+                Vertex temp = aa;
+                aa = bb;
+                bb = temp;
+            }
 //                4. interpolace podle Y
-                int yStart = Math.max(0, (int) aa.getY() + 1);
-                double yEnd = Math.min(raster.getHeight() - 1, bb.getY());
-                for (int y = yStart; y <= yEnd; y++) {
-                    double t1 = (y - aa.getY()) / (bb.getY() - aa.getY());
-                    Vertex d = aa.mul(1 - t1).add(bb.mul(t1));
-                    drawPixel((int)Math.round(d.getX()),(int)Math.round(d.getY()),d.getZ(),d.getColor());
+            int yStart = Math.max(0, (int) aa.getY() + 1);
+            double yEnd = Math.min(raster.getHeight() - 1, bb.getY());
+            for (int y = yStart; y <= yEnd; y++) {
+                double t1 = (y - aa.getY()) / (bb.getY() - aa.getY());
+                Vertex d = aa.mul(1 - t1).add(bb.mul(t1));
+                drawPixel((int) Math.round(d.getX()), (int) Math.round(d.getY()), d.getZ(), d.getColor());
+            }
+
+
         }
-
-
-
-
-                // slide 125
-
-
-
-
-
-                }
 
 //       lina se krespi pixel po pixelu
 
-            }
-        }
+    }
 
     private void fillLine(Vertex a, Vertex b) {
         if (a.getX() > b.getX()) {
@@ -342,7 +350,7 @@ public class Renderer3D implements GPURenderer {
                 .mul(new Vec3D(1, -1, 1)) // Y jde nahoru a my chceme, aby šlo dolů
                 .add(new Vec3D(1, 1, 0)) // (0,0) je uprostřed a my chceme, aby bylo vlevo nahoře
                 .mul(new Vec3D(raster.getWidth() / 2f, raster.getHeight() / 2f, 1));
-                // máme <0;2> -> vynásobíme polovinou velikosti plátna
+        // máme <0;2> -> vynásobíme polovinou velikosti plátna
     }
 
     @Override
@@ -364,10 +372,15 @@ public class Renderer3D implements GPURenderer {
     public void setProjection(Mat4 projection) {
         this.projection = projection;
     }
-//    public void switchPoints(Vertex prvni, Vertex druhy){
-//        Vertex temp = prvni;
-//        prvni = druhy;
-//        druhy = temp;
-//        }
+
+    public void setModelType(boolean filled) {
+        this.filled = filled;
+    }
+
+    public void linkPoints(Vertex prvni, Vertex druhy){
+        Vertex temp = prvni;
+        prvni = druhy;
+        druhy = temp;
+        }
 
 }
