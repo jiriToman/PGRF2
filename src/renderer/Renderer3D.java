@@ -1,12 +1,15 @@
 package renderer;
 
 import model.Part;
+import model.Solid;
 import model.TopologyType;
 import model.Vertex;
 import rasterize.DepthBuffer;
 import rasterize.Raster;
 import transforms.*;
 
+import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +20,7 @@ public class Renderer3D implements GPURenderer {
 
     private Mat4 model, view, projection;
     public boolean filled = true;
+
 
     public Renderer3D(Raster<Integer> raster) {
         this.raster = raster;
@@ -55,15 +59,27 @@ public class Renderer3D implements GPURenderer {
 
                     Vertex v1 = vb.get(i1);
                     Vertex v2 = vb.get(i2);
-
-                    prepareline(v1, v2);
+                    prepareline(v1, v2, null);
                 }
 
-            } // pokud je obj drat model line , plocha triangle
+                                }else if (topologyType == TopologyType.AXIS) {
+                    for (int i = index; i < index + count * 2; i += 2) {
+                        Integer i1 = ib.get(i);
+                        Integer i2 = ib.get(i + 1);
+
+
+                        Vertex v1 = vb.get(i1);
+                        Vertex v2 = vb.get(i2);
+                        Col axis = v2.getColor();
+                        prepareline(v1, v2,axis);
+                    }
+
+                } // pokud je obj drat model line , plocha triangle
         }
     }
 
-    private void prepareline(Vertex v1, Vertex v2) {
+
+    private void prepareline(Vertex v1, Vertex v2,Col axis) {
         // 1. transformace vrcholů
         Vertex a = new Vertex(v1.getPoint().mul(model).mul(view).mul(projection), v1.getColor());
         Vertex b = new Vertex(v2.getPoint().mul(model).mul(view).mul(projection), v2.getColor());
@@ -96,11 +112,11 @@ public class Renderer3D implements GPURenderer {
             Vertex ab = a.mul(1 - t1).add(b.mul(t1));
 
 
-            drawLine(a, ab);
+            drawLine(a, ab,axis);
 
         } else {
 
-            drawLine(a, b);
+            drawLine(a, b,axis);
         }
     }
 
@@ -246,15 +262,15 @@ public class Renderer3D implements GPURenderer {
             }
 
         } else {
-        drawLine(a,b);
-        drawLine(a,c);
-        drawLine(b,c);
+            drawLine(a, b, null);
+            drawLine(a, c,null);
+            drawLine(b, c,null);
 
         }
 
     }
 
-    private void drawLine(Vertex a, Vertex b) {
+    private void drawLine(Vertex a, Vertex b,Col axis) {
         // 1. dehomogenizace
         Optional<Vertex> dA = a.dehomog();
         Optional<Vertex> dB = b.dehomog();
@@ -295,7 +311,14 @@ public class Renderer3D implements GPURenderer {
             for (int x = xStart; x <= xEnd; x++) {
                 double t1 = (x - aa.getX()) / (bb.getX() - aa.getX());
                 Vertex d = aa.mul(1 - t1).add(bb.mul(t1));
-                drawPixel((int) Math.round(d.getX()), (int) Math.round(d.getY()), d.getZ(), d.getColor());
+
+                if(axis== null){
+                    drawPixel((int) Math.round(d.getX()), (int) Math.round(d.getY()), d.getZ(), d.getColor());
+
+                }
+                else{
+                    drawPixel((int) Math.round(d.getX()), (int) Math.round(d.getY()), d.getZ(), axis);
+                }
             }
         } else {
             if (y2 < y1) {
@@ -309,7 +332,14 @@ public class Renderer3D implements GPURenderer {
             for (int y = yStart; y <= yEnd; y++) {
                 double t1 = (y - aa.getY()) / (bb.getY() - aa.getY());
                 Vertex d = aa.mul(1 - t1).add(bb.mul(t1));
-                drawPixel((int) Math.round(d.getX()), (int) Math.round(d.getY()), d.getZ(), d.getColor());
+                if(axis== null){
+                    drawPixel((int) Math.round(d.getX()), (int) Math.round(d.getY()), d.getZ(), d.getColor());
+
+                }
+                else{
+                    drawPixel((int) Math.round(d.getX()), (int) Math.round(d.getY()), d.getZ(), axis);
+                }
+                }
             }
 
 
@@ -317,7 +347,7 @@ public class Renderer3D implements GPURenderer {
 
 //       lina se krespi pixel po pixelu
 
-    }
+
 
     private void fillLine(Vertex a, Vertex b) {
         if (a.getX() > b.getX()) {
@@ -377,10 +407,10 @@ public class Renderer3D implements GPURenderer {
         this.filled = filled;
     }
 
-    public void linkPoints(Vertex prvni, Vertex druhy){
+    public void linkPoints(Vertex prvni, Vertex druhy) {
         Vertex temp = prvni;
         prvni = druhy;
         druhy = temp;
-        }
+    }
 
 }
