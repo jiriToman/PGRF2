@@ -29,6 +29,7 @@ public class Controller3D {
     private Cuboid cuboid;
     private Line line;
     private Axis axis;
+    private SolidBicubic bicubic;
     private int solidID =0;
 
     private Mat4 model, projection;
@@ -55,12 +56,9 @@ public class Controller3D {
 //        pohled transforms camera
 
         initBuffers();
-//        initAxis();
+
         display();
-//        // test draw
-//        imageBuffer.setElement(50, 50, Color.YELLOW.getRGB());
-//        panel.repaint();
-    }
+       }
 
     private void display() {
         panel.clear();
@@ -72,7 +70,7 @@ public class Controller3D {
         for (int i=0;i< solidBuffer.toArray().length; i++){
         renderer.setModel(solidBuffer.get(i).getModel());
         renderer.draw(solidBuffer.get(i).getParts(), solidBuffer.get(i).getIndices(),solidBuffer.get(i).getVertices());}
-//        renderer.draw(partBuffer, indexBuffer, vertexBuffer);
+
         renderer.setModel(axisBuffer.get(0).getModel());
         renderer.draw(axisBuffer.get(0).getParts(), axisBuffer.get(0).getIndices(),axisBuffer.get(0).getVertices());
         renderer.setModel(new Mat4Identity());
@@ -83,23 +81,7 @@ public class Controller3D {
         panel.repaint();
     }
 
-    private void update() {
-        panel.clear();
-        renderer.clear();
 
-        renderer.setModel(model);
-        renderer.setView(camera.getViewMatrix());
-        renderer.setProjection(projection);
-
-//        renderer.draw();
-        renderer.draw(partBuffer, indexBuffer, vertexBuffer);
-        renderer.setModel(new Mat4Identity());
-//        renderer.draw(axisBuffer, indexBuffer, vertexBuffer);
-
-        // necessary to manually request update of the UI
-
-        panel.repaint();
-    }
 
     private void initMatrices() {
         model = new Mat4Identity();
@@ -233,23 +215,16 @@ public class Controller3D {
     private void initBuffers() {
 
 //        solidBuffer.add(new Triangle());
-//        partBuffer.add(new Part(TopologyType.TRIANGLE, 0, 1));
-//        partBuffer.add(new Part(TopologyType.LINE, 3, 2));
+
         solidBuffer.add(new Pyramid());
         solidBuffer.add(new Cube());
         solidBuffer.add(new Cuboid());
+        solidBuffer.add(new SolidBicubic(Cubic.BEZIER));
 //        solidBuffer.add(new Line());
         axisBuffer.add(new Axis());
 
     }
 
-//    private void initAxis() {
-//
-//
-//
-//
-//
-//    }
 
     private void setRotationModel(double alpha, double beta, double gamma) {
         Mat4RotXYZ rotation = new Mat4RotXYZ(alpha, beta, gamma);
@@ -259,12 +234,11 @@ public class Controller3D {
     }
 
     private void setScaleModel(double x, double y, double z) {
-//        renderer.clear();
+
         Mat4Scale scale = new Mat4Scale(x, y, z);
-//        renderer.setView(camera.getViewMatrix());
-//        renderer.setProjection(projection);
+
         solidBuffer.get(solidID).setModel(solidBuffer.get(solidID).getModel().mul(scale));//misto nuly var telesa
-//        renderer.setModel(model);
+
         display();
     }
 
@@ -279,7 +253,7 @@ public class Controller3D {
         Mat4Transl translation = new Mat4Transl(-2, -2, -2);
         Mat4Scale scale = new Mat4Scale(0.5, 0.5, 0.5);
         Mat4RotXYZ rotation = new Mat4RotXYZ(0.785398, 0.785398, 0.785398);
-        solidBuffer.get(solidID).setModel(solidBuffer.get(solidID).getModel().mul(scale).mul(rotation).mul(scale));
+        solidBuffer.get(solidID).setModel(solidBuffer.get(solidID).getModel().mul(translation).mul(rotation).mul(scale));
          display();
     }
 

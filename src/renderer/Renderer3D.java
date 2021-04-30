@@ -87,8 +87,8 @@ public class Renderer3D implements GPURenderer {
         // 2. ořezání
         if (a.getX() > a.getW() && b.getX() > b.getW()) return; // line je moc vpravo
         if (a.getX() < -a.getW() && b.getX() < -b.getW()) return; // moc vlevo
-        if (a.getY() > a.getW() && b.getY() > b.getY()) return; // je moc nahore
-        if (a.getY() < -a.getW() && b.getY() < -b.getY()) return; // moc dole
+        if (a.getY() > a.getW() && b.getY() > b.getW()) return; // je moc nahore
+        if (a.getY() < -a.getW() && b.getY() < -b.getW()) return; // moc dole
         if (a.getZ() > a.getW() && b.getZ() > b.getW()) return;
         if (a.getZ() < 0 && b.getZ() < 0) return;
 
@@ -132,8 +132,8 @@ public class Renderer3D implements GPURenderer {
         if (a.getX() > a.getW() && b.getX() > b.getW() && c.getX() > c.getW()) return; // trojúhelník je moc vpravo
         if (a.getX() < -a.getW() && b.getX() < -b.getW() && c.getX() < -c.getW()) return; // moc vlevo
 
-        if (a.getY() > a.getW() && b.getY() > b.getY() && c.getY() > c.getY()) return; // trojúhelník je moc nahore
-        if (a.getY() < -a.getW() && b.getY() < -b.getY() && c.getW() < -c.getY()) return; // moc dole
+        if (a.getY() > a.getW() && b.getY() > b.getW() && c.getY() > c.getW()) return; // trojúhelník je moc nahore
+        if (a.getY() < -a.getW() && b.getY() < -b.getW() && c.getY() < -c.getW()) return; // moc dole
 
         if (a.getZ() > a.getW() && b.getZ() > b.getW() && c.getZ() > c.getW()) return;
         if (a.getZ() < 0 && b.getZ() < 0 && c.getZ() < 0) return;
