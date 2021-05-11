@@ -20,4 +20,4 @@ Přidání funkcionality pro implementaci zobrazovacího řetězce Z-Buffer v ja
 
 ## Zdrojový repositář vyučujícího
 
-> https://gitlab.com/Bruno.Jezek/pgrf1
+> https://github.com/milankostak/KPGR12-2020-21/tree/kpgr2
