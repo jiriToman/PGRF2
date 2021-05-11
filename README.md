@@ -6,14 +6,14 @@ Přidání funkcionality pro implementaci zobrazovacího řetězce Z-Buffer v ja
 
 ## Ovládání
 
- Držení levého tlačítka myši  a tažení hýbe kamerou
- Šipky pro pohyb ve scéně
- P přepnutí projekce
- F přepnutí drátový/vyplněný model
- C přepnutí vybraného objektu
- X,Y,Z rotace podle stejnojmenné osy
- N,M posunutí
- J,K změna velikosti
+* Držení levého tlačítka myši  a tažení hýbe kamerou
+* Šipky pro pohyb ve scéně
+* P přepnutí projekce
+* F přepnutí drátový/vyplněný model
+* C přepnutí vybraného objektu
+* X,Y,Z rotace podle stejnojmenné osy
+* N,M posunutí
+* J,K změna velikosti
  
  
 
